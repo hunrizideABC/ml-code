@@ -44,9 +44,26 @@ class LogisticRegression:
         probabilities = self.sigmoid(np.dot(X, self.theta))
         return (probabilities >= 0.5).astype(int)
 
-    def accuracy(self, y_true, y_pred):
-        """Calculate the accuracy of the model."""
-        return np.mean(y_true == y_pred) * 100
+    def evaluate(self, y_true, y_pred):
+        """计算并输出模型的准确率、精确率、召回率和F1分数"""
+        accuracy = np.mean(y_true == y_pred)
+
+        # True Positive (TP), False Positive (FP), True Negative (TN), False Negative (FN)
+        TP = np.sum((y_true == 1) & (y_pred == 1))
+        FP = np.sum((y_true == -1) & (y_pred == 1))
+        TN = np.sum((y_true == -1) & (y_pred == -1))
+        FN = np.sum((y_true == 1) & (y_pred == -1))
+
+        precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+        recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+        f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+        return {
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1_score': f1_score
+        }
 
 # 使用示例
 if __name__ == "__main__":
@@ -54,17 +71,12 @@ if __name__ == "__main__":
     np.random.seed(42)
     X = np.random.rand(100, 2)  # 100个样本，每个样本有两个特征
     y = (X[:, 0] + X[:, 1] > 1).astype(int)  # 简单的标签规则，x1 + x2 > 1的样本属于类别1，否则属于类别0
-
     # 2. 创建逻辑回归模型实例
     model = LogisticRegression(alpha=0.01, num_iters=1000)
-
     # 3. 训练模型
     model.fit(X, y)
-
     # 4. 预测
     predictions = model.predict(X)
-
     # 5. 评估
-    accuracy = model.accuracy(y, predictions)
-    print(f"Trained theta: {model.theta}")
-    print(f"Model accuracy: {accuracy:.2f}%")
+    metrics = model.evaluate(y, predictions)
+    print(f"Model metrics:\n{metrics}")
