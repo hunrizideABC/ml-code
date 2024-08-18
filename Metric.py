@@ -1,3 +1,4 @@
+import numpy as np
 def precision_recall_f1(y_true, y_pred):
     tp = sum((yt == 1 and yp == 1) for yt, yp in zip(y_true, y_pred))
     fp = sum((yt == 0 and yp == 1) for yt, yp in zip(y_true, y_pred))
@@ -19,46 +20,35 @@ print(f"Precision: {precision}")
 print(f"Recall: {recall}")
 print(f"F1 Score: {f1}")
 
-
-def calculate_auc(y_true, y_scores):
-    # 获取正类和负类的数量
-    pos_count = sum(y_true)
-    neg_count = len(y_true) - pos_count
-
-    # 按照预测分数对样本排序
-    sorted_indices = sorted(range(len(y_scores)), key=lambda i: y_scores[i], reverse=True)
-
-    auc = 0.0
-    tp = 0
-    fp = 0
-    prev_fpr = 0.0
-    prev_tpr = 0.0
-
-    for i in sorted_indices:
-        if y_true[i] == 1:
-            tp += 1
-        else:
-            fp += 1
-
-        fpr = fp / neg_count
-        tpr = tp / pos_count
-
-        auc += (fpr - prev_fpr) * (tpr + prev_tpr) / 2
-
-        prev_fpr = fpr
-        prev_tpr = tpr
-
-    return auc
-
-
-# 测试数据
-y_true = [0, 0, 1, 1]
-y_scores = [0.1, 0.4, 0.35, 0.8]
-
-auc = calculate_auc(y_true, y_scores)
-print(f"AUC: {auc}")
-
 import numpy as np
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+
+
+def AUC(label, pre):
+    pos = [i for i in range(len(label)) if label[i] == 1]
+    neg = [i for i in range(len(label)) if label[i] == 0]
+
+    auc = 0
+    for i in pos:
+        for j in neg:
+            if pre[i] > pre[j]:
+                auc += 1
+            elif pre[i] == pre[j]:
+                auc += 0.5
+
+    return auc / (len(pos) * len(neg))
+
+
+
+
+
+y = np.array([1, 0, 0, 0, 1, 0, 1, 0, ])
+pred = np.array([0.9, 0.8, 0.3, 0.1, 0.4, 0.9, 0.66, 0.7])
+
+fpr, tpr, thresholds = roc_curve(y, pred, pos_label=1)
+print("-----sklearn:", auc(fpr, tpr))
+print("-----py脚本:", AUC(y, pred))
 
 
 def dcg_at_k(r, k):
